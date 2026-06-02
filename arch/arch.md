@@ -1,273 +1,137 @@
 # Deadman
 
-Deadman is an independent service responsible for monitoring the **liveliness of critical Frappe Cloud capabilities**.
+Deadman is a heartbeat-based reliability service for Frappe Cloud.
 
-Unlike traditional monitoring systems, Deadman does not perform health checks itself. It only receives periodic heartbeats from components that have already verified their own health.
+It monitors the liveliness of critical platform capabilities by tracking periodic heartbeats emitted by Press.
 
-If a heartbeat stops arriving within the expected interval, Deadman assumes that the capability has failed and raises alerts.
+Deadman does not perform health checks, collect metrics, or inspect infrastructure. Its sole responsibility is detecting the absence of expected heartbeats and triggering alerts.
 
 ---
 
-## Philosophy
+## Design pattern
 
-Deadman follows the classic dead man's switch pattern:
+Deadman follows the classic dead man's switch pattern.
 
-> "Keep proving you're alive. If you stop proving it, I'll assume something is wrong."
-
-Deadman does **not** know:
-
-- How Prometheus works
-- How Sentry works
-- How Twilio works
-- How Elasticsearch works
-
-Those systems are responsible for determining their own health.
-
-Deadman only knows:
-
-- Capability Name
-- Expected Heartbeat Interval
-- Last Seen Timestamp
+> Keep proving you're alive. If you stop proving it, something is wrong.
 
 ---
 
 ## Architecture
 
 ```text
-                Deadman
-                     ▲
-                     │
-              Heartbeats
-                     │
- ┌───────────────────┼───────────────────┐
- │                   │                   │
- │                   │                   │
+                  Capability Sources
+                           │
+                           ▼
 
-Press            Monitor Agent      Trace Agent
-                 Log Agent
+                        Press
+                  (Health Evaluation)
+                           │
+                           ▼
 
- │                   │                   │
+                        Deadman
+                 (Heartbeat Tracking)
+                           │
+                           ▼
 
-validate_incidents   Prometheus          Sentry
-resolve_incidents    Alertmanager
-call_humans          Grafana
-
-Twilio
-Telegram
+                         Alerts
 ```
+
+Press acts as the control plane and health aggregator.
+
+Deadman acts as the heartbeat tracker and alerting system.
 
 ---
 
-## Responsibilities
+## Capability Sources
 
-### Press
+Press determines capability health using one of the following sources.
 
-Press is responsible for heartbeats related to operational workflows and external dependencies.
+```text
+                         Press
+                           ▲
+                           │
+
+        ┌──────────────────┼──────────────────┐
+        │                  │                  │
+        ▼                  ▼                  ▼
+
+ Internal Checks     Grafana Data      Agent Queries
+```
+
+### Internal Checks
+
+Capabilities evaluated directly by Press.
 
 Examples:
 
-- validate_incidents
-- resolve_incidents
+- incident_validation
+- incident_resolution
 - call_humans
-- Twilio
-- Telegram
+- twilio
+- telegram
 
-Example:
+### Grafana
 
-```python
-def validate_incidents():
-    ...
-    send_heartbeat("incident_validation")
-```
-
-Example:
-
-```python
-if twilio_balance > 0:
-    send_heartbeat("twilio")
-```
-
----
-
-### Agent
-
-Agent is responsible for heartbeats related to infrastructure services.
-
-Agent runs on:
-
-- Monitor Servers
-- Trace Servers
-- Log Servers
-
-A dedicated background process can periodically verify services present on the machine and emit heartbeats.
-
-Example:
-
-```python
-while True:
-    check_monitor_server()
-    check_trace_server()
-    check_log_server()
-
-    sleep(60)
-```
-
----
-
-### Monitor Server
-
-Before sending a heartbeat, Agent verifies:
-
-- Prometheus
-- Alertmanager
-- Grafana
-
-Example:
-
-```python
-if prometheus_healthy() and alertmanager_healthy():
-    heartbeat("monitor_server")
-```
-
----
-
-### Trace Server
-
-Before sending a heartbeat, Agent verifies:
-
-- Sentry
-- Supporting containers/services
-
-Example:
-
-```python
-if sentry_healthy():
-    heartbeat("trace_server")
-```
-
----
-
-### Log Server
-
-Before sending a heartbeat, Agent verifies:
-
-- Elasticsearch
-- Kibana
-
-Example:
-
-```python
-if elasticsearch_healthy() and kibana_healthy():
-    heartbeat("log_server")
-```
-
----
-
-## Deadman Responsibilities
-
-Deadman is intentionally simple.
-
-It performs only three actions:
-
-### Receive Heartbeats
-
-```http
-POST /heartbeat
-```
-
-Example:
-
-```json
-{
-    "capability": "trace_server",
-    "token": "..."
-}
-```
-
----
-
-### Track Last Seen
+Infrastructure capabilities should use the existing observability stack whenever possible.
 
 ```text
-trace_server
-last_seen = 2026-06-02 12:00:00
+Exporter
+    │
+    ▼
+Prometheus
+    │
+    ▼
+Grafana
+    │
+    ▼
+Press
 ```
-
----
-
-### Detect Silence
-
-If:
-
-```text
-current_time - last_seen > expected_interval
-```
-
-Deadman creates an alert and begins notification fan-out.
-
----
-
-## Notification Fan-out
-
-Deadman notifies engineers through every available channel.
 
 Examples:
 
-- Telegram
-- Phone Calls
-- Email
-- Raven
-- Future notification providers
+- monitor_server
+- trace_server
+- log_server
+- node availability
+- service metrics
+- infrastructure metrics
 
-Deadman should avoid circular dependencies whenever possible.
+### Agent Queries
 
-Example:
-
-If:
+When capability information is not available through Grafana, Press may query Agent directly.
 
 ```text
-Twilio Balance < 0
+Press
+   │
+   ▼
+ Agent
+   │
+   ▼
+Local Service State
 ```
 
-Deadman should not rely solely on Twilio to notify engineers about the Twilio outage.
+Examples:
 
-Alternative channels such as Telegram and Email should still be used.
+- Docker container status
+- Service-specific health checks
+- Machine-local diagnostics
 
----
+Agent never communicates directly with Deadman.
 
-## Provisioning
-
-Deadman is provisioned through Press similar to:
-
-- Monitor Server
-- Trace Server
-- Log Server
-
-Provisioning responsibilities include:
-
-- VM creation
-- Frappe app installation
-- Token generation
-- Configuration injection
-- Agent configuration
-
-No manual installation or credential copy-pasting should be required.
+Agent never emits heartbeats.
 
 ---
 
-## Core Principle
-
-Deadman is not another monitoring system.
-
-Monitoring systems determine health.
-
-Deadman determines silence.
+## Data Flow
 
 ```text
-Component
+Capability
      │
      ▼
-Self Health Check
+Health Verification
+     │
+     ▼
+Press
      │
      ▼
 Heartbeat
@@ -278,3 +142,115 @@ Deadman
      ▼
 Alert
 ```
+
+A heartbeat is emitted only when Press determines that a capability is healthy.
+
+Deadman tracks heartbeat activity and generates alerts when expected heartbeats stop arriving.
+
+---
+
+## Capability Model
+
+Each monitored capability consists of:
+
+| Field | Description |
+|---------|------------|
+| Capability | Unique capability identifier |
+| Expected Interval | Maximum allowed heartbeat delay |
+| Last Seen | Timestamp of the last heartbeat |
+
+Example:
+
+```text
+Capability        : trace_server
+Expected Interval : 5 minutes
+Last Seen         : 2026-06-02 12:00:00
+```
+
+---
+
+## Deadman Processing
+
+### Heartbeat Ingestion
+
+```http
+POST /heartbeat
+```
+
+Example:
+
+```json
+{
+  "capability": "trace_server",
+  "token": "..."
+}
+```
+
+### Silence Detection
+
+```text
+current_time - last_seen > expected_interval
+```
+
+When a capability exceeds its expected heartbeat interval, Deadman marks it as unavailable and triggers alert fan-out.
+
+---
+
+## Alerting
+
+```text
+Capability Failure
+        │
+        ▼
+      Deadman
+        │
+        ▼
+ Notification Fan-out
+        │
+        ├── Telegram
+        ├── Email
+        ├── Phone
+        └── Raven
+```
+
+Deadman should avoid relying solely on the failing dependency to deliver alerts.
+
+Example:
+
+```text
+Twilio Balance < 0
+```
+
+Twilio should not be the only configured notification channel for Twilio-related failures.
+
+---
+
+## Deployment
+
+Deadman is provisioned through Press similarly to other platform services.
+
+Provisioning responsibilities include:
+
+- VM creation
+- Application deployment
+- Token generation
+- Configuration injection
+
+No manual installation or credential distribution should be required.
+
+---
+
+## Non-Goals
+
+Deadman is not:
+
+- A monitoring system
+- A metrics collection platform
+- A tracing platform
+- A log aggregation platform
+- A service discovery system
+- A replacement for Prometheus
+- A replacement for Grafana
+- A replacement for Alertmanager
+
+Deadman complements the existing observability stack by detecting the absence of expected signals rather than producing them.
