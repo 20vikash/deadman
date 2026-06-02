@@ -8,7 +8,7 @@ Deadman does not perform health checks, collect metrics, or inspect infrastructu
 
 ---
 
-## Design pattern
+## Design Pattern
 
 Deadman follows the classic dead man's switch pattern.
 
@@ -64,11 +64,11 @@ Capabilities evaluated directly by Press.
 
 Examples:
 
-- incident_validation
-- incident_resolution
-- call_humans
-- twilio
-- telegram
+* incident_validation
+* incident_resolution
+* call_humans
+* twilio
+* telegram
 
 ### Grafana
 
@@ -89,12 +89,12 @@ Press
 
 Examples:
 
-- monitor_server
-- trace_server
-- log_server
-- node availability
-- service metrics
-- infrastructure metrics
+* monitor_server
+* trace_server
+* log_server
+* node availability
+* service metrics
+* infrastructure metrics
 
 ### Agent Queries
 
@@ -112,9 +112,8 @@ Local Service State
 
 Examples:
 
-- Docker container status
-- Service-specific health checks
-- Machine-local diagnostics
+* Service-specific health checks
+* Machine-local diagnostics
 
 Agent never communicates directly with Deadman.
 
@@ -153,18 +152,62 @@ Deadman tracks heartbeat activity and generates alerts when expected heartbeats 
 
 Each monitored capability consists of:
 
-| Field | Description |
-|---------|------------|
-| Capability | Unique capability identifier |
-| Expected Interval | Maximum allowed heartbeat delay |
-| Last Seen | Timestamp of the last heartbeat |
+| Field             | Description                              |
+| ----------------- | ---------------------------------------- |
+| Capability        | Unique capability identifier             |
+| Expected Interval | Expected heartbeat frequency             |
+| Grace Multiplier  | Allowed heartbeat misses before alerting |
+| Last Seen         | Timestamp of the last heartbeat          |
 
 Example:
 
 ```text
 Capability        : trace_server
 Expected Interval : 5 minutes
+Grace Multiplier  : 3
 Last Seen         : 2026-06-02 12:00:00
+```
+
+---
+
+## Grace Multiplier
+
+Deadman does not immediately alert when a heartbeat is missed.
+
+Each capability defines:
+
+* Expected Interval
+* Grace Multiplier
+
+The effective timeout is calculated as:
+
+```text
+effective_timeout = expected_interval × grace_multiplier
+```
+
+Example:
+
+```text
+Capability        : trace_server
+Expected Interval : 5 minutes
+Grace Multiplier  : 3
+
+Effective Timeout : 15 minutes
+```
+
+This allows Deadman to tolerate:
+
+* Temporary network failures
+* Short service restarts
+* Deployment windows
+* Transient infrastructure issues
+
+before generating alerts.
+
+A capability is considered unavailable only when:
+
+```text
+current_time - last_seen > effective_timeout
 ```
 
 ---
@@ -189,10 +232,14 @@ Example:
 ### Silence Detection
 
 ```text
-current_time - last_seen > expected_interval
+effective_timeout = expected_interval × grace_multiplier
 ```
 
-When a capability exceeds its expected heartbeat interval, Deadman marks it as unavailable and triggers alert fan-out.
+```text
+current_time - last_seen > effective_timeout
+```
+
+When a capability exceeds its effective timeout, Deadman marks it as unavailable and triggers alert fan-out.
 
 ---
 
@@ -231,10 +278,10 @@ Deadman is provisioned through Press similarly to other platform services.
 
 Provisioning responsibilities include:
 
-- VM creation
-- Application deployment
-- Token generation
-- Configuration injection
+* VM provisioning
+* Application deployment
+* Token generation
+* Configuration injection
 
 No manual installation or credential distribution should be required.
 
@@ -244,13 +291,13 @@ No manual installation or credential distribution should be required.
 
 Deadman is not:
 
-- A monitoring system
-- A metrics collection platform
-- A tracing platform
-- A log aggregation platform
-- A service discovery system
-- A replacement for Prometheus
-- A replacement for Grafana
-- A replacement for Alertmanager
+* A monitoring system
+* A metrics collection platform
+* A tracing platform
+* A log aggregation platform
+* A service discovery system
+* A replacement for Prometheus
+* A replacement for Grafana
+* A replacement for Alertmanager
 
 Deadman complements the existing observability stack by detecting the absence of expected signals rather than producing them.
