@@ -10,8 +10,7 @@
   "capability_name",
   "heartbeat_interval",
   "column_break_ddzh",
-  "grace_multiplier",
-  "last_seen"
+  "grace_multiplier"
  ],
  "fields": [
   {
@@ -27,7 +26,7 @@
   },
   {
    "fieldname": "heartbeat_interval",
-   "fieldtype": "Data",
+   "fieldtype": "Int",
    "in_list_view": 1,
    "label": "Heartbeat Interval",
    "reqd": 1
@@ -40,17 +39,12 @@
    "fieldname": "grace_multiplier",
    "fieldtype": "Float",
    "label": "Grace Multiplier"
-  },
-  {
-   "fieldname": "last_seen",
-   "fieldtype": "Datetime",
-   "label": "Last Seen"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-06-04 14:01:53.022865",
+ "modified": "2026-06-04 14:08:26.157691",
  "modified_by": "Administrator",
  "module": "Deadman",
  "name": "Capability",

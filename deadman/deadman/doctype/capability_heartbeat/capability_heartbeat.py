@@ -5,7 +5,7 @@
 from frappe.model.document import Document
 
 
-class Capability(Document):
+class CapabilityHeartbeat(Document):
 	# begin: auto-generated types
 	# This code is auto-generated. Do not modify anything in this block.
 
@@ -14,9 +14,8 @@ class Capability(Document):
 	if TYPE_CHECKING:
 		from frappe.types import DF
 
-		capability_name: DF.Data
-		grace_multiplier: DF.Float
-		heartbeat_interval: DF.Int
+		capability: DF.Link
+		last_seen: DF.Datetime
 	# end: auto-generated types
 
-	_DOCTYPE_NAME = "Capability"
+	_DOCTYPE_NAME = "Capability Heartbeat"

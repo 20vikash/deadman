@@ -15,8 +15,8 @@ class CapabilityIncident(Document):
 		from frappe.types import DF
 
 		capability: DF.Link
-		reason: DF.Data | None
-		resolved_at: DF.Datetime
+		reason: DF.SmallText | None
+		resolved_at: DF.Datetime | None
 		started_at: DF.Datetime
 		status: DF.Literal["Open", "Resolved"]
 	# end: auto-generated types

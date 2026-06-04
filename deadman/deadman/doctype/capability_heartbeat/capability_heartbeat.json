@@ -2,23 +2,19 @@
  "actions": [],
  "allow_bulk_edit": 1,
  "allow_rename": 1,
- "creation": "2026-06-04 12:32:15.697277",
+ "creation": "2026-06-04 14:08:46.255018",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
-  "section_break_0czj",
+  "section_break_mo5s",
   "capability",
-  "started_at",
-  "resolved_at",
-  "column_break_goic",
-  "status",
-  "reason"
+  "last_seen"
  ],
  "fields": [
   {
-   "fieldname": "section_break_0czj",
+   "fieldname": "section_break_mo5s",
    "fieldtype": "Section Break",
-   "label": "Capability Incident"
+   "label": "Capability Heartbeat"
   },
   {
    "fieldname": "capability",
@@ -29,40 +25,19 @@
    "reqd": 1
   },
   {
-   "fieldname": "started_at",
+   "fieldname": "last_seen",
    "fieldtype": "Datetime",
-   "label": "Started At",
+   "label": "Last Seen",
    "reqd": 1
-  },
-  {
-   "fieldname": "resolved_at",
-   "fieldtype": "Datetime",
-   "label": "Resolved At"
-  },
-  {
-   "fieldname": "column_break_goic",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "status",
-   "fieldtype": "Select",
-   "label": "Status",
-   "options": "Open\nResolved",
-   "reqd": 1
-  },
-  {
-   "fieldname": "reason",
-   "fieldtype": "Small Text",
-   "label": "Reason"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-06-04 14:16:09.054486",
+ "modified": "2026-06-04 14:37:19.298242",
  "modified_by": "Administrator",
  "module": "Deadman",
- "name": "Capability Incident",
+ "name": "Capability Heartbeat",
  "owner": "Administrator",
  "permissions": [
   {

@@ -23,6 +23,7 @@
    "reqd": 1
   },
   {
+   "default": "3",
    "fieldname": "default_grace_multiplier",
    "fieldtype": "Float",
    "in_list_view": 1,
@@ -34,7 +35,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-06-04 14:02:12.621429",
+ "modified": "2026-06-04 14:18:31.111458",
  "modified_by": "Administrator",
  "module": "Deadman",
  "name": "Deadman Settings",
