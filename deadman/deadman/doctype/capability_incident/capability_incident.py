@@ -1,8 +1,9 @@
 # Copyright (c) 2026, vikash and contributors
 # For license information, please see license.txt
 
-# import frappe
+import frappe
 from frappe.model.document import Document
+from frappe.utils import now_datetime
 
 
 class CapabilityIncident(Document):
@@ -22,3 +23,40 @@ class CapabilityIncident(Document):
 	# end: auto-generated types
 
 	_DOCTYPE_NAME = "Capability Incident"
+
+	def after_insert(self):
+		#TODO: Fan out alerts to notification channels
+		pass
+
+
+def create_incident(capability: str, reason: str):
+	incident = frappe.get_doc(
+		{
+			"doctype": "Capability Incident",
+			"capability": capability,
+			"started_at": now_datetime(),
+			"status": "Open",
+			"reason": reason,
+		}
+	)
+
+	incident.insert(ignore_permissions=True)
+
+	return incident
+
+
+def resolve_incident(incident_name: str):
+	if not incident_name:
+		return None
+
+	incident = frappe.get_doc(
+		"Capability Incident",
+		incident_name,
+	)
+
+	incident.status = "Resolved"
+	incident.resolved_at = now_datetime()
+
+	incident.save(ignore_permissions=True)
+
+	return incident
