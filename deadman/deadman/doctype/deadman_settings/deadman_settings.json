@@ -7,7 +7,7 @@
  "engine": "InnoDB",
  "field_order": [
   "section_break_smg0",
-  "deadman_token",
+  "deadman_password",
   "default_grace_multiplier",
   "telegram_section",
   "telegram_bot_token",
@@ -25,12 +25,6 @@
    "fieldname": "section_break_smg0",
    "fieldtype": "Section Break",
    "label": "Deadman Settings"
-  },
-  {
-   "fieldname": "deadman_token",
-   "fieldtype": "Password",
-   "label": "Deadman Token",
-   "reqd": 1
   },
   {
    "default": "3",
@@ -90,13 +84,19 @@
    "fieldname": "notification_users_section",
    "fieldtype": "Section Break",
    "label": "Notification Users"
+  },
+  {
+   "fieldname": "deadman_password",
+   "fieldtype": "Password",
+   "label": "Deadman Password",
+   "reqd": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-06-04 18:11:02.381079",
+ "modified": "2026-06-04 22:18:07.560662",
  "modified_by": "Administrator",
  "module": "Deadman",
  "name": "Deadman Settings",

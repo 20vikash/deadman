@@ -15,7 +15,7 @@ class DeadmanSettings(Document):
 		from deadman.deadman.doctype.notification_users.notification_users import NotificationUsers
 		from frappe.types import DF
 
-		deadman_token: DF.Password
+		deadman_password: DF.Password
 		default_grace_multiplier: DF.Float
 		notification_users: DF.Table[NotificationUsers]
 		telegram_bot_token: DF.Password | None
