@@ -2,6 +2,7 @@
  "actions": [],
  "allow_bulk_edit": 1,
  "allow_rename": 1,
+ "autoname": "field:capability_name",
  "creation": "2026-06-04 12:22:40.336121",
  "doctype": "DocType",
  "engine": "InnoDB",
@@ -22,7 +23,8 @@
    "fieldname": "capability_name",
    "fieldtype": "Data",
    "label": "Capability Name",
-   "reqd": 1
+   "reqd": 1,
+   "unique": 1
   },
   {
    "fieldname": "heartbeat_interval",
@@ -44,10 +46,11 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-06-04 14:08:26.157691",
+ "modified": "2026-06-04 18:14:44.276165",
  "modified_by": "Administrator",
  "module": "Deadman",
  "name": "Capability",
+ "naming_rule": "By fieldname",
  "owner": "Administrator",
  "permissions": [
   {

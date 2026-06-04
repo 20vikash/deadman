@@ -8,7 +8,17 @@
  "field_order": [
   "section_break_smg0",
   "deadman_token",
-  "default_grace_multiplier"
+  "default_grace_multiplier",
+  "telegram_section",
+  "telegram_bot_token",
+  "telegram_chat_id",
+  "twilio_section",
+  "twilio_account_sid",
+  "twilio_api_key_sid",
+  "twilio_phone_number",
+  "twilio_api_key_secret",
+  "notification_users_section",
+  "notification_users"
  ],
  "fields": [
   {
@@ -29,13 +39,64 @@
    "in_list_view": 1,
    "label": "Default Grace Multiplier",
    "reqd": 1
+  },
+  {
+   "fieldname": "twilio_account_sid",
+   "fieldtype": "Data",
+   "label": "Twilio Account SID"
+  },
+  {
+   "fieldname": "twilio_api_key_sid",
+   "fieldtype": "Data",
+   "label": "Twilio Api Key SID"
+  },
+  {
+   "fieldname": "twilio_phone_number",
+   "fieldtype": "Data",
+   "label": "Twilio Phone Number"
+  },
+  {
+   "fieldname": "telegram_bot_token",
+   "fieldtype": "Password",
+   "label": "Telegram Bot Token"
+  },
+  {
+   "fieldname": "telegram_chat_id",
+   "fieldtype": "Data",
+   "label": "Telegram Chat ID"
+  },
+  {
+   "fieldname": "telegram_section",
+   "fieldtype": "Section Break",
+   "label": "Telegram"
+  },
+  {
+   "fieldname": "twilio_section",
+   "fieldtype": "Section Break",
+   "label": "Twilio"
+  },
+  {
+   "fieldname": "twilio_api_key_secret",
+   "fieldtype": "Password",
+   "label": "Twilio API Key Secret"
+  },
+  {
+   "fieldname": "notification_users",
+   "fieldtype": "Table",
+   "label": "Notification Users",
+   "options": "Notification Users"
+  },
+  {
+   "fieldname": "notification_users_section",
+   "fieldtype": "Section Break",
+   "label": "Notification Users"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-06-04 14:18:31.111458",
+ "modified": "2026-06-04 18:11:02.381079",
  "modified_by": "Administrator",
  "module": "Deadman",
  "name": "Deadman Settings",

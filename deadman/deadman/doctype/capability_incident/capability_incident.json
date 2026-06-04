@@ -2,6 +2,7 @@
  "actions": [],
  "allow_bulk_edit": 1,
  "allow_rename": 1,
+ "autoname": "field:capability",
  "creation": "2026-06-04 12:32:15.697277",
  "doctype": "DocType",
  "engine": "InnoDB",
@@ -26,7 +27,8 @@
    "in_list_view": 1,
    "label": "Capability",
    "options": "Capability",
-   "reqd": 1
+   "reqd": 1,
+   "unique": 1
   },
   {
    "fieldname": "started_at",
@@ -59,10 +61,11 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-06-04 14:16:09.054486",
+ "modified": "2026-06-04 18:14:26.205177",
  "modified_by": "Administrator",
  "module": "Deadman",
  "name": "Capability Incident",
+ "naming_rule": "By fieldname",
  "owner": "Administrator",
  "permissions": [
   {

@@ -2,6 +2,7 @@
  "actions": [],
  "allow_bulk_edit": 1,
  "allow_rename": 1,
+ "autoname": "field:capability",
  "creation": "2026-06-04 14:08:46.255018",
  "doctype": "DocType",
  "engine": "InnoDB",
@@ -22,7 +23,8 @@
    "in_list_view": 1,
    "label": "Capability",
    "options": "Capability",
-   "reqd": 1
+   "reqd": 1,
+   "unique": 1
   },
   {
    "fieldname": "last_seen",
@@ -34,10 +36,11 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-06-04 14:37:19.298242",
+ "modified": "2026-06-04 18:14:07.020596",
  "modified_by": "Administrator",
  "module": "Deadman",
  "name": "Capability Heartbeat",
+ "naming_rule": "By fieldname",
  "owner": "Administrator",
  "permissions": [
   {
