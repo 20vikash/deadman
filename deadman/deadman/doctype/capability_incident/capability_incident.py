@@ -90,12 +90,20 @@ class CapabilityIncident(Document):
 				from_=settings.twilio_phone_number,
 				twiml=f"""
 				<Response>
-					<Say>{message}<Say>
+					<Say>{message}</Say>
 				</Response>
 				""",
 			)
 		except TwilioRestException:
 			raise
+
+	def call_humans(self, message: str):
+		frappe.enqueue_doc(
+			self.doctype,
+			self.name,
+			"_call_humans",
+			message=message,
+		)
 
 	def _call_humans(self, message: str):
 		for human in self.get_humans():
@@ -110,15 +118,14 @@ class CapabilityIncident(Document):
 				if status in ["in-progress", "completed"]:  # call was picked up
 					self.status = "Acknowledged"
 					self.acknowledged_by = human.user
+					self.save(ignore_permissions=True)
 					break
-			finally:
-				self.save()
 
 	def send_twilio_sms(self, message: str):
 		for human in self.get_humans():
 			self.twilio_client.messages.create(to=human.phone, from_=self.twilio_phone_number, body=message)
 
-	def send_telegram_message(message: str):
+	def send_telegram_message(self, message: str):
 		settings: DeadmanSettings = frappe.get_cached_doc("Deadman Settings")
 
 		token = settings.get_password("telegram_bot_token")
@@ -138,19 +145,24 @@ class CapabilityIncident(Document):
 		return response.json()
 
 
-def create_incident(capability: str, reason: str):
-	incident = frappe.get_doc(
+def create_incident(capability: str, reason: str) -> CapabilityIncident:
+	if existing := frappe.db.exists(
+		"Capability Incident",
+		{
+			"capability": capability,
+			"status": ("in", ["Validating", "Confirmed", "Acknowledged"]),
+		},
+	):
+		return frappe.get_doc("Capability Incident", existing)
+
+	return frappe.get_doc(
 		{
 			"doctype": "Capability Incident",
 			"capability": capability,
 			"started_at": now_datetime(),
 			"reason": reason,
 		}
-	)
-
-	incident.insert(ignore_permissions=True)
-
-	return incident
+	).insert(ignore_permissions=True)
 
 
 def resolve_incident(incident_name: str):
