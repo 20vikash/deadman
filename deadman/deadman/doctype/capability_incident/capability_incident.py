@@ -23,6 +23,7 @@ class CapabilityIncident(Document):
 	if TYPE_CHECKING:
 		from frappe.types import DF
 
+		acknowledged_by: DF.Link | None
 		capability: DF.Link
 		reason: DF.SmallText | None
 		resolved_at: DF.Datetime | None
@@ -46,13 +47,21 @@ class CapabilityIncident(Document):
 			settings.twilio_account_sid,
 		)
 
-
 	@property
 	def twilio_phone_number(self):
 		pass
 
 	def get_humans(self):
-		pass
+		settings: DeadmanSettings = frappe.get_cached_doc("Deadman Settings")
+		users = settings.notification_users
+
+		ret = list(users)
+		if self.status == "Acknowledged":  # repeat the acknowledged user to be the first
+			for user in users:
+				if user.user == self.acknowledged_by:
+					ret.remove(user)
+					ret.insert(0, user)
+		return ret
 
 	def call_human(self):
 		pass
@@ -60,9 +69,9 @@ class CapabilityIncident(Document):
 	def call_humans(self):
 		pass
 
-	def send_twilio_sms(self):
-		pass
-
+	def send_twilio_sms(self, message: str):
+		for human in self.get_humans():
+			self.twilio_client.messages.create(to=human.phone, from_=self.twilio_phone_number, body=message)
 
 	def send_telegram_message(message: str):
 		settings: DeadmanSettings = frappe.get_cached_doc("Deadman Settings")
@@ -90,7 +99,6 @@ def create_incident(capability: str, reason: str):
 			"doctype": "Capability Incident",
 			"capability": capability,
 			"started_at": now_datetime(),
-			"status": "Open",
 			"reason": reason,
 		}
 	)
