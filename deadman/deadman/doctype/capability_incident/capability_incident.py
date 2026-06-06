@@ -52,9 +52,10 @@ class CapabilityIncident(Document):
 			settings.twilio_account_sid,
 		)
 
-	@property
+	@cached_property
 	def twilio_phone_number(self):
-		pass
+		settings: DeadmanSettings = frappe.get_cached_doc("Deadman Settings")
+		return settings.twilio_phone_number
 
 	def get_humans(self):
 		settings: DeadmanSettings = frappe.get_cached_doc("Deadman Settings")
