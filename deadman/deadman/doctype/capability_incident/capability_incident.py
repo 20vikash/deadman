@@ -8,7 +8,9 @@ from frappe.utils import now_datetime
 from typing import TYPE_CHECKING
 
 from twilio.rest import Client
+from twilio.base.exceptions import TwilioRestException
 import requests
+from functools import cached_property
 
 if TYPE_CHECKING:
 	from deadman.deadman.doctype.deadman_settings.deadman_settings import DeadmanSettings
@@ -37,7 +39,7 @@ class CapabilityIncident(Document):
 		#TODO: Fan out alerts to notification channels
 		pass
 
-	@property
+	@cached_property
 	def twilio_client(self):
 		settings: DeadmanSettings = frappe.get_cached_doc("Deadman Settings")
 
@@ -63,8 +65,23 @@ class CapabilityIncident(Document):
 					ret.insert(0, user)
 		return ret
 
-	def call_human(self):
-		pass
+	def call_human(self, phone: str, message: str):
+		settings: DeadmanSettings = frappe.get_cached_doc("Deadman Settings")
+
+		try:
+			client = self.twilio_client
+
+			return client.calls.create(
+				to=phone,
+				from_=settings.twilio_phone_number,
+				twiml=f"""
+				<Response>
+					<Say>{message}<Say>
+				</Response>
+				""",
+			)
+		except TwilioRestException:
+			raise
 
 	def call_humans(self):
 		pass
