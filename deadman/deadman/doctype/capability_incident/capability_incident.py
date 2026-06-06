@@ -11,9 +11,12 @@ from twilio.rest import Client
 from twilio.base.exceptions import TwilioRestException
 import requests
 from functools import cached_property
+from tenacity import RetryError, retry, stop_after_attempt, wait_fixed
+from tenacity.retry import retry_if_not_result
 
 if TYPE_CHECKING:
 	from deadman.deadman.doctype.deadman_settings.deadman_settings import DeadmanSettings
+	from twilio.rest.api.v2010.account.call import CallInstance
 
 
 class CapabilityIncident(Document):
@@ -64,8 +67,18 @@ class CapabilityIncident(Document):
 					ret.remove(user)
 					ret.insert(0, user)
 		return ret
+	
+	@retry(
+		retry=retry_if_not_result(
+			lambda result: result in ["canceled", "completed", "failed", "busy", "no-answer", "in-progress"]
+		),
+		wait=wait_fixed(1),
+		stop=stop_after_attempt(30),
+	)
+	def wait_for_pickup(self, call: CallInstance):
+		return call.fetch().status  # will eventually be no-answer
 
-	def call_human(self, phone: str, message: str):
+	def call_human(self, phone: str, message: str) -> CallInstance:
 		settings: DeadmanSettings = frappe.get_cached_doc("Deadman Settings")
 
 		try:
@@ -83,8 +96,22 @@ class CapabilityIncident(Document):
 		except TwilioRestException:
 			raise
 
-	def call_humans(self):
-		pass
+	def _call_humans(self, message: str):
+		for human in self.get_humans():
+			if not (call := self.call_human(human.phone, message)):
+				return  # can't twilio
+			status = str(call.status)
+			try:
+				status = str(self.wait_for_pickup(call))
+			except RetryError:
+				status = "timeout"  # not Twilio's status; mostly translates to no-answer
+			else:
+				if status in ["in-progress", "completed"]:  # call was picked up
+					self.status = "Acknowledged"
+					self.acknowledged_by = human.user
+					break
+			finally:
+				self.save()
 
 	def send_twilio_sms(self, message: str):
 		for human in self.get_humans():
