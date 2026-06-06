@@ -46,10 +46,11 @@
    "fieldtype": "Column Break"
   },
   {
+   "default": "Validating",
    "fieldname": "status",
    "fieldtype": "Select",
    "label": "Status",
-   "options": "Open\nResolved",
+   "options": "Validating\nConfirmed\nAcknowledged\nResolved",
    "reqd": 1
   },
   {
@@ -61,7 +62,7 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-06-04 18:14:26.205177",
+ "modified": "2026-06-06 14:58:41.822376",
  "modified_by": "Administrator",
  "module": "Deadman",
  "name": "Capability Incident",
