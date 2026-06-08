@@ -10,7 +10,6 @@ from deadman.deadman.doctype.capability_incident.capability_incident import (
     resolve_incident,
 )
 
-
 class Capability(Document):
 	# begin: auto-generated types
 	# This code is auto-generated. Do not modify anything in this block.

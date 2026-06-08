@@ -149,23 +149,13 @@ app_license = "mit"
 # Scheduled Tasks
 # ---------------
 
-# scheduler_events = {
-# 	"all": [
-# 		"deadman.tasks.all"
-# 	],
-# 	"daily": [
-# 		"deadman.tasks.daily"
-# 	],
-# 	"hourly": [
-# 		"deadman.tasks.hourly"
-# 	],
-# 	"weekly": [
-# 		"deadman.tasks.weekly"
-# 	],
-# 	"monthly": [
-# 		"deadman.tasks.monthly"
-# 	],
-# }
+scheduler_events = {
+    "cron": {
+        "*/3 * * * *": [
+            "deadman.deadman.doctype.capability.capability.check_heartbeat",
+        ]
+    }
+}
 
 # Testing
 # -------
