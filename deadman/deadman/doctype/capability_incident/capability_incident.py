@@ -39,8 +39,32 @@ class CapabilityIncident(Document):
 	_DOCTYPE_NAME = "Capability Incident"
 
 	def after_insert(self):
-		#TODO: Fan out alerts to notification channels
-		pass
+		if self.status == "Validating":
+			self.send_telegram_message(f"Capability {self.capability} might be down: {self.reason}")
+	
+	def on_update(self):
+		if not self.has_value_changed("status"):
+			return
+
+		if self.status == "Confirmed":
+			message = (
+				f"Capability {self.capability} is down: "
+				f"{self.reason}"
+			)
+
+			self.call_humans(message)
+			self.send_twilio_sms(message)
+			self.send_telegram_message(message)
+
+		elif self.status == "Acknowledged":
+			self.send_telegram_message(
+				f"Incident {self.name} acknowledged by {self.acknowledged_by}"
+			)
+
+		elif self.status == "Resolved":
+			self.send_telegram_message(
+				f"Capability {self.capability} resolved"
+			)
 
 	@cached_property
 	def twilio_client(self):
