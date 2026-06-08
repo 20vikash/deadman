@@ -154,19 +154,19 @@ class CapabilityIncident(Document):
 
 
 def create_incident(capability, reason: str, status: str) -> CapabilityIncident:
-	existing_capability = frappe.db.exists(
+	existing_incident = frappe.db.exists(
 		"Capability Incident",
 		{
 			"capability": capability,
 			"status": ("in", ["Validating", "Confirmed", "Acknowledged"]),
 		},
 	)
-	if existing_capability and status == capability.status:
-		return frappe.get_doc("Capability Incident", existing_capability)
-	elif existing_capability and status != existing_capability.status:
+	if existing_incident and status == existing_incident.status:
+		return frappe.get_doc("Capability Incident", existing_incident)
+	elif existing_incident and status != existing_incident.status:
 		doc = frappe.get_doc(
 			"Capability Incident",
-			existing_capability,
+			existing_incident,
 		)
 		doc.status = status # Eg. Validating -> Confirmed
 		doc.reason = reason

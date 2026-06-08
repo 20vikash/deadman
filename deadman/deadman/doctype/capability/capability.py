@@ -42,47 +42,65 @@ def check_heartbeat():
 		],
 	)
 
-	for capability in capabilities:
-		heartbeat = frappe.db.get_value(
+	heartbeats = {
+		h.capability: h
+		for h in frappe.get_all(
 			"Capability Heartbeat",
-			{"capability": capability.name},
-			["name", "last_seen"],
-			as_dict=True,
+			fields=["capability", "last_seen"],
 		)
+	}
+
+	for capability in capabilities:
+		heartbeat = heartbeats.get(capability.name)
 
 		if not heartbeat:
 			continue
 
-		grace_multiplier = capability.grace_multiplier or default_grace_multiplier
+		grace_multiplier = (
+			capability.grace_multiplier
+			or default_grace_multiplier
+		)
 
-		allowed_delay = capability.heartbeat_interval * grace_multiplier
+		allowed_delay = (
+			capability.heartbeat_interval
+			* grace_multiplier
+		)
 
 		seconds_since_last_heartbeat = (
 			now - heartbeat.last_seen
 		).total_seconds()
 
+		reason = (
+			f"Heartbeat missing. "
+			f"Expected every {capability.heartbeat_interval} seconds. "
+			f"Last seen at {heartbeat.last_seen}."
+		)
+
 		if seconds_since_last_heartbeat > allowed_delay:
 			create_incident(
-				capability=capability,
-				reason=(
-					f"Heartbeat missing. "
-					f"Expected every {capability.heartbeat_interval} seconds. "
-					f"Last seen at {heartbeat.last_seen}."
-				),
+				capability=capability.name,
+				reason=reason,
 				status="Confirmed",
 			)
+
 		elif seconds_since_last_heartbeat > capability.heartbeat_interval:
 			create_incident(
-				capability=capability,
-				reason=(
-					f"Heartbeat missing. "
-					f"Expected every {capability.heartbeat_interval} seconds. "
-					f"Last seen at {heartbeat.last_seen}."
-				),
+				capability=capability.name,
+				reason=reason,
 				status="Validating",
 			)
+
 		else:
+			open_incident = frappe.db.exists(
+				"Capability Incident",
+				{
+					"capability": capability.name,
+					"status": (
+						"in",
+						["Validating", "Confirmed", "Acknowledged"],
+					),
+				},
+			)
+
 			if open_incident:
 				resolve_incident(open_incident)
-
-	frappe.db.commit()
