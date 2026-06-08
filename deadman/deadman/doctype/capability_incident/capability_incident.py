@@ -122,6 +122,14 @@ class CapabilityIncident(Document):
 					break
 
 	def send_twilio_sms(self, message: str):
+		frappe.enqueue_doc(
+			self.doctype,
+			self.name,
+			"_send_twilio_sms",
+			message=message,
+		)
+
+	def _send_twilio_sms(self, message: str):
 		for human in self.get_humans():
 			self.twilio_client.messages.create(to=human.phone, from_=self.twilio_phone_number, body=message)
 
@@ -145,24 +153,35 @@ class CapabilityIncident(Document):
 		return response.json()
 
 
-def create_incident(capability: str, reason: str) -> CapabilityIncident:
-	if existing := frappe.db.exists(
+def create_incident(capability, reason: str, status: str) -> CapabilityIncident:
+	existing_capability = frappe.db.exists(
 		"Capability Incident",
 		{
 			"capability": capability,
 			"status": ("in", ["Validating", "Confirmed", "Acknowledged"]),
 		},
-	):
-		return frappe.get_doc("Capability Incident", existing)
-
-	return frappe.get_doc(
-		{
-			"doctype": "Capability Incident",
-			"capability": capability,
-			"started_at": now_datetime(),
-			"reason": reason,
-		}
-	).insert(ignore_permissions=True)
+	)
+	if existing_capability and status == capability.status:
+		return frappe.get_doc("Capability Incident", existing_capability)
+	elif existing_capability and status != existing_capability.status:
+		doc = frappe.get_doc(
+			"Capability Incident",
+			existing_capability,
+		)
+		doc.status = status # Eg. Validating -> Confirmed
+		doc.reason = reason
+		doc.save(ignore_permissions=True)
+		return doc
+	else:
+		return frappe.get_doc(
+			{
+				"doctype": "Capability Incident",
+				"capability": capability,
+				"started_at": now_datetime(),
+				"reason": reason,
+				"status": status,
+			}
+		).insert(ignore_permissions=True)
 
 
 def resolve_incident(incident_name: str):

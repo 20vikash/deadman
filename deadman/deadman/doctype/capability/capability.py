@@ -54,38 +54,34 @@ def check_heartbeat():
 		if not heartbeat:
 			continue
 
-		grace_multiplier = (
-			capability.grace_multiplier
-			or default_grace_multiplier
-		)
+		grace_multiplier = capability.grace_multiplier or default_grace_multiplier
 
-		allowed_delay = (
-			capability.heartbeat_interval
-			* grace_multiplier
-		)
+		allowed_delay = capability.heartbeat_interval * grace_multiplier
 
 		seconds_since_last_heartbeat = (
 			now - heartbeat.last_seen
 		).total_seconds()
 
-		open_incident = frappe.db.exists(
-			"Capability Incident",
-			{
-				"capability": capability.name,
-				"status": "Open",
-			},
-		)
-
 		if seconds_since_last_heartbeat > allowed_delay:
-			if not open_incident:
-				create_incident(
-					capability=capability.name,
-					reason=(
-						f"Heartbeat missing. "
-						f"Expected every {capability.heartbeat_interval} seconds. "
-						f"Last seen at {heartbeat.last_seen}."
-					),
-				)
+			create_incident(
+				capability=capability,
+				reason=(
+					f"Heartbeat missing. "
+					f"Expected every {capability.heartbeat_interval} seconds. "
+					f"Last seen at {heartbeat.last_seen}."
+				),
+				status="Confirmed",
+			)
+		elif seconds_since_last_heartbeat > capability.heartbeat_interval:
+			create_incident(
+				capability=capability,
+				reason=(
+					f"Heartbeat missing. "
+					f"Expected every {capability.heartbeat_interval} seconds. "
+					f"Last seen at {heartbeat.last_seen}."
+				),
+				status="Validating",
+			)
 		else:
 			if open_incident:
 				resolve_incident(open_incident)
