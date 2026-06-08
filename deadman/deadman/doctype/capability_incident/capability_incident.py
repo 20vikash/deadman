@@ -153,36 +153,41 @@ class CapabilityIncident(Document):
 		return response.json()
 
 
-def create_incident(capability, reason: str, status: str) -> CapabilityIncident:
-	existing_incident = frappe.db.exists(
+def create_incident(
+	capability: str,
+	reason: str,
+	status: str,
+) -> CapabilityIncident:
+	existing_incident_name = frappe.db.exists(
 		"Capability Incident",
 		{
 			"capability": capability,
 			"status": ("in", ["Validating", "Confirmed", "Acknowledged"]),
 		},
 	)
-	if existing_incident and status == existing_incident.status:
-		return frappe.get_doc("Capability Incident", existing_incident)
-	elif existing_incident and status != existing_incident.status:
-		doc = frappe.get_doc(
-			"Capability Incident",
-			existing_incident,
-		)
-		doc.status = status # Eg. Validating -> Confirmed
-		doc.reason = reason
-		doc.save(ignore_permissions=True)
-		return doc
-	else:
-		return frappe.get_doc(
-			{
-				"doctype": "Capability Incident",
-				"capability": capability,
-				"started_at": now_datetime(),
-				"reason": reason,
-				"status": status,
-			}
-		).insert(ignore_permissions=True)
 
+	if existing_incident_name:
+		incident = frappe.get_doc(
+			"Capability Incident",
+			existing_incident_name,
+		)
+
+		if incident.status != status:
+			incident.status = status # eg: Validating -> Confirmed
+			incident.reason = reason
+			incident.save(ignore_permissions=True)
+
+		return incident
+
+	return frappe.get_doc(
+		{
+			"doctype": "Capability Incident",
+			"capability": capability,
+			"started_at": now_datetime(),
+			"reason": reason,
+			"status": status,
+		}
+	).insert(ignore_permissions=True)
 
 def resolve_incident(incident_name: str):
 	if not incident_name:
