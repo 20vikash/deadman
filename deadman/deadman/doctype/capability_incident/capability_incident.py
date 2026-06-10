@@ -40,7 +40,16 @@ class CapabilityIncident(Document):
 
 	def after_insert(self):
 		if self.status == "Validating":
-			self.send_telegram_message(f"Capability {self.capability} might be down: {self.reason}")
+			message = (
+				f"Capability {self.capability} validating"
+				f"might be down: {self.reason}"
+			)
+
+			self.send_telegram_message(message)
+			self.send_email(
+				f"Capability {self.capability} validating",
+				message,
+			)
 	
 	def on_update(self):
 		if not self.has_value_changed("status"):
@@ -56,14 +65,32 @@ class CapabilityIncident(Document):
 			self.send_twilio_sms(message)
 			self.send_telegram_message(message)
 
+			self.send_email(
+				f"Capability {self.capability} is down",
+				message,
+			)
+
 		elif self.status == "Acknowledged":
-			self.send_telegram_message(
-				f"Incident {self.name} acknowledged by {self.acknowledged_by}"
+			message = (
+				f"Incident {self.name} acknowledged by "
+				f"{self.acknowledged_by}"
+			)
+
+			self.send_telegram_message(message)
+
+			self.send_email(
+				f"Capability {self.capability} acknowledged",
+				message,
 			)
 
 		elif self.status == "Resolved":
-			self.send_telegram_message(
-				f"Capability {self.capability} resolved"
+			message = f"Capability {self.capability} resolved"
+
+			self.send_telegram_message(message)
+
+			self.send_email(
+				f"Capability {self.capability} resolved",
+				message,
 			)
 
 	@cached_property
@@ -93,6 +120,26 @@ class CapabilityIncident(Document):
 					ret.insert(0, user)
 		return ret
 	
+	def get_notification_emails(self) -> list[str]:
+		return [
+			email
+			for human in self.get_humans()
+			if (email := frappe.db.get_value("User", human.user, "email"))
+		]
+	
+	def send_email(self, subject: str, message: str):
+		recipients = self.get_notification_emails()
+
+		if not recipients:
+			return
+
+		frappe.sendmail(
+			recipients=recipients,
+			subject=subject,
+			message=message,
+			now=True,
+		)
+
 	@retry(
 		retry=retry_if_not_result(
 			lambda result: result in ["canceled", "completed", "failed", "busy", "no-answer", "in-progress"]
