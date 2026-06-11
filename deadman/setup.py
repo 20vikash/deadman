@@ -17,7 +17,7 @@ def initialize_deadman(secret: str):
 		("incident_resolution", 300),
 		("prometheus", 300),
 		("alertmanager", 300),
-		("twilio", 600),
+		("twilio", 300),
 	]
 
 	for capability_name, heartbeat_interval in default_capabilities:
